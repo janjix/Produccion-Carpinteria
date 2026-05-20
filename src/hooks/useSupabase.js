@@ -1,33 +1,49 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase.js';
+
+let channelCounter = 0;
 
 // ─── Generic realtime hook ───
 export function useRealtimeTable(table, orderBy = 'created_at', filter = null) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const channelRef = useRef(null);
+
+  const filterCol = filter?.column || null;
+  const filterVal = filter?.value || null;
 
   const fetchData = useCallback(async () => {
     let query = supabase.from(table).select('*').order(orderBy);
-    if (filter) {
-      query = query.eq(filter.column, filter.value);
+    if (filterCol && filterVal) {
+      query = query.eq(filterCol, filterVal);
     }
     const { data: rows, error } = await query;
     if (!error) setData(rows || []);
     setLoading(false);
-  }, [table, orderBy, filter?.column, filter?.value]);
+  }, [table, orderBy, filterCol, filterVal]);
 
   useEffect(() => {
+    if (filter && !filterVal) {
+      setData([]);
+      setLoading(false);
+      return;
+    }
+
     fetchData();
 
+    // Unique channel name to avoid collisions
+    channelCounter++;
+    const channelName = `${table}-${filterVal || 'all'}-${channelCounter}`;
+
     const channel = supabase
-      .channel(`${table}-changes`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table,
-          ...(filter ? { filter: `${filter.column}=eq.${filter.value}` } : {}),
+          ...(filterCol && filterVal ? { filter: `${filterCol}=eq.${filterVal}` } : {}),
         },
         () => {
           fetchData();
@@ -35,10 +51,15 @@ export function useRealtimeTable(table, orderBy = 'created_at', filter = null) {
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [fetchData, table, filter?.column, filter?.value]);
+  }, [fetchData, table, filterCol, filterVal]);
 
   return { data, loading, refetch: fetchData };
 }
@@ -79,8 +100,10 @@ export function useActivityLog(projectId = null) {
 
   useEffect(() => {
     fetchData();
+    channelCounter++;
+    const channelName = `activity-log-${projectId || 'all'}-${channelCounter}`;
     const channel = supabase
-      .channel('activity-log-changes')
+      .channel(channelName)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity_log' }, () => fetchData())
       .subscribe();
     return () => supabase.removeChannel(channel);
