@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import { useProjects, useRealtimeTable } from './hooks/useSupabase.js';
 import ProjectsList from './components/ProjectsList.jsx';
 import ProjectDetail from './components/ProjectDetail.jsx';
