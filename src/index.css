@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap');
+
+:root {
+  --bg: #0f1117;
+  --surface: #181a24;
+  --hover: #1e2130;
+  --border: #2a2d3a;
+  --track: #252838;
+  --t1: #e8e9ed;
+  --t2: #8a8fa4;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--t1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #7c6df040;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--t2);
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #7c6df0 !important;
+  outline: none;
+}
+
+select {
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 600px) {
+  .nav-label {
+    display: none;
+  }
+}
